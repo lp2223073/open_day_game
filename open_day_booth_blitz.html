@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Open Day Booth Blitz! - Bottle Flip & Target Toss</title>
+    <!-- Load Fredoka and Inter fonts for a playful, crisp arcade look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Arcade Styling & Animations */
+        :root {
+            --font-display: 'Fredoka', cursive, sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            font-family: var(--font-body);
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #6366f1 100%);
+            touch-action: none; /* Prevent browser pull-to-refresh and scrolling during gameplay */
+        }
+
+        h1, h2, h3, .font-arcade {
+            font-family: var(--font-display);
+        }
+
+        /* Vibrant Arcade 3D-style Buttons */
+        .btn-arcade {
+            font-family: var(--font-display);
+            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.1s ease;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25), 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-arcade:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.25), 0 14px 24px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-arcade:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25), 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-yellow {
+            background: linear-gradient(180deg, #fde047 0%, #facc15 100%);
+            border: 3px solid #fef08a;
+            color: #713f12;
+            box-shadow: 0 6px 0 #ca8a04, 0 12px 20px rgba(0, 0, 0, 0.25);
+        }
+        .btn-yellow:active {
+            box-shadow: 0 2px 0 #ca8a04, 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-green {
+            background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+            border: 3px solid #86efac;
+            color: #052e16;
+            box-shadow: 0 6px 0 #15803d, 0 12px 20px rgba(0, 0, 0, 0.25);
+        }
+        .btn-green:active {
+            box-shadow: 0 2px 0 #15803d, 0 4px 8px rgba(0, 0, 0, 0.25);
+        }
+
+        .btn-pink {
+            background: linear-gradient(180deg, #f472b6 0%, #ec4899 100%);
+            border: 3px solid #fbcfe8;
+            color: #ffffff;
+            box-shadow: 0 5px 0 #be185d, 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        .btn-pink:active {
+            box-shadow: 0 2px 0 #be185d, 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Bunting Banner Animation */
+        @keyframes sway {
+            0%, 100% { transform: rotate(-1deg); }
+            50% { transform: rotate(1deg); }
+        }
+        .bunting-sway {
+            animation: sway 4s ease-in-out infinite;
+            transform-origin: top center;
+        }
+
+        /* Pulse animation for timer warning */
+        @keyframes urgentPulse {
+            0%, 100% { transform: scale(1); color: #ef4444; }
+            50% { transform: scale(1.15); color: #fca5a5; }
+        }
+        .timer-urgent {
+            animation: urgentPulse 0.6s infinite;
+        }
+
+        /* Custom scrollbar for leaderboard */
+        .leaderboard-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .leaderboard-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .leaderboard-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 10px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="w-screen h-screen flex flex-col justify-between relative overflow-hidden">
+
+    <!-- Main Game Container -->
+    <div id="game-wrapper" class="relative w-full h-full flex flex-col">
+
+        <!-- Top HUD Bar (Always visible, adapts to screens) -->
+        <header class="relative z-20 w-full px-3 py-2 sm:px-6 sm:py-3 flex items-center justify-between bg-slate-900/85 backdrop-blur-md border-b-4 border-amber-400 shadow-lg">
+            <!-- Left: Booth Badge & Sound Toggle -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-arcade font-bold px-3 py-1 rounded-full text-xs sm:text-sm md:text-base shadow-inner flex items-center gap-1.5">
+                    <span>🎪</span>
+                    <span class="hidden xs:inline">OPEN DAY</span>
+                    <span>BOOTH BLITZ</span>
+                </div>
+                <button id="btn-sound" aria-label="Toggle Sound" class="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-white border-2 border-slate-600 transition active:scale-95" title="Toggle Sound Effects">
+                    <span id="sound-icon" class="text-base sm:text-lg">🔊</span>
+                </button>
+            </div>
+
+            <!-- Center: Score, Combo & Timer -->
+            <div class="flex items-center gap-3 sm:gap-6 md:gap-8">
+                <!-- Score -->
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-sky-300">Score</span>
+                    <span id="hud-score" class="font-arcade text-xl sm:text-3xl font-bold text-white leading-none drop-shadow">0</span>
+                </div>
+
+                <!-- Combo Multiplier Pill -->
+                <div id="hud-combo-box" class="flex flex-col items-center bg-slate-800/90 px-2.5 py-1 rounded-xl border-2 border-purple-400/50 transition-transform duration-150">
+                    <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-purple-300">Combo</span>
+                    <span id="hud-combo" class="font-arcade text-lg sm:text-2xl font-bold text-amber-300 leading-none">1x</span>
+                </div>
+
+                <!-- Timer -->
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-rose-300">Time</span>
+                    <span id="hud-timer" class="font-arcade text-xl sm:text-3xl font-bold text-emerald-400 leading-none drop-shadow">60s</span>
+                </div>
+            </div>
+
+            <!-- Right: Leaderboard & Reset Controls -->
+            <div class="flex items-center gap-2">
+                <button id="btn-open-leaderboard" class="btn-arcade btn-pink px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5">
+                    <span>🏆</span>
+                    <span class="hidden sm:inline">Top Scores</span>
+                </button>
+                <button id="btn-quit-early" class="hidden bg-slate-700 hover:bg-rose-600 text-white font-bold px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs sm:text-sm border-2 border-slate-500 transition" title="End Current Round">
+                    ✖
+                </button>
+            </div>
+        </header>
+
+        <!-- Interactive Fullscreen Canvas Area -->
+        <main class="relative flex-1 w-full h-full overflow-hidden">
+            <canvas id="game-canvas"></canvas>
+
+            <!-- START / TITLE SCREEN OVERLAY -->
+            <div id="screen-start" class="absolute inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+                <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border-4 border-amber-400 text-center relative overflow-hidden">
+                    <!-- Decorative Top Strip -->
+                    <div class="absolute top-0 left-0 right-0 h-3 bg-gradient-to-r from-rose-500 via-amber-400 via-emerald-400 to-sky-500"></div>
+
+                    <div class="inline-block bg-amber-100 text-amber-800 font-bold text-xs sm:text-sm px-3 py-1 rounded-full mb-2 border border-amber-300">
+                        🎓 P5 & P6 OPEN DAY CHALLENGE
+                    </div>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-900 tracking-tight mb-2">
+                        BOTTLE FLIP &<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-500 to-indigo-600">TARGET BLITZ!</span>
+                    </h1>
+                    <p class="text-slate-600 text-sm sm:text-base mb-5 font-medium">
+                        You have <strong class="text-rose-600">60 seconds</strong> to land trick-shot bottle flips and thread floating target hoops!
+                    </p>
+
+                    <!-- Quick Visual How-To-Play Cards -->
+                    <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-6 text-left">
+                        <div class="bg-sky-50 border-2 border-sky-200 rounded-2xl p-2.5 sm:p-3 flex flex-col items-center text-center">
+                            <span class="text-2xl sm:text-3xl mb-1">👆</span>
+                            <span class="font-arcade font-bold text-sky-900 text-xs sm:text-sm">1. Drag & Flick</span>
+                            <span class="text-[11px] text-sky-700 leading-tight mt-0.5">Pull back & release to launch</span>
+                        </div>
+                        <div class="bg-amber-50 border-2 border-amber-200 rounded-2xl p-2.5 sm:p-3 flex flex-col items-center text-center">
+                            <span class="text-2xl sm:text-3xl mb-1">⭕</span>
+                            <span class="font-arcade font-bold text-amber-900 text-xs sm:text-sm">2. Hit Rings</span>
+                            <span class="text-[11px] text-amber-700 leading-tight mt-0.5">Pass through hoops for +50 pts</span>
+                        </div>
+                        <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-2.5 sm:p-3 flex flex-col items-center text-center">
+                            <span class="text-2xl sm:text-3xl mb-1">🍾</span>
+                            <span class="font-arcade font-bold text-emerald-900 text-xs sm:text-sm">3. Land Upright</span>
+                            <span class="text-[11px] text-emerald-700 leading-tight mt-0.5">Stick the landing to build Combo!</span>
+                        </div>
+                    </div>
+
+                    <!-- Primary Action Button -->
+                    <button id="btn-start-game" class="btn-arcade btn-green w-full py-4 rounded-2xl text-xl sm:text-2xl font-extrabold tracking-wide uppercase flex items-center justify-center gap-2">
+                        <span>🚀 START 60s CHALLENGE!</span>
+                    </button>
+
+                    <!-- Mini Top 3 Preview -->
+                    <div class="mt-5 pt-4 border-t border-slate-200 flex items-center justify-between text-xs sm:text-sm text-slate-600">
+                        <span class="font-bold flex items-center gap-1">🏆 Current High Score:</span>
+                        <span id="start-high-score" class="font-arcade font-bold text-indigo-600 text-base">0 pts (---)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME OVER & SCORE SUBMISSION OVERLAY -->
+            <div id="screen-gameover" class="hidden absolute inset-0 z-30 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
+                <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border-4 border-amber-400 text-center relative">
+                    <div id="new-record-badge" class="hidden absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-rose-500 text-white font-arcade font-bold px-4 py-1 rounded-full text-sm shadow-lg animate-bounce">
+                        🎉 NEW BOOTH RECORD! 🎉
+                    </div>
+
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-1">TIME'S UP!</h2>
+                    <p class="text-slate-500 text-sm font-medium mb-4">Awesome round at the Open Day Booth!</p>
+
+                    <!-- Final Score Box -->
+                    <div class="bg-gradient-to-br from-indigo-600 to-sky-500 rounded-2xl p-4 text-white mb-4 shadow-inner">
+                        <div class="text-xs uppercase tracking-widest font-bold text-sky-100">Final Score</div>
+                        <div id="final-score" class="font-arcade text-5xl sm:text-6xl font-extrabold my-1 drop-shadow">0</div>
+                        <div class="flex justify-center gap-4 text-xs sm:text-sm font-semibold text-sky-100 mt-2 pt-2 border-t border-white/20">
+                            <span>🍾 Landings: <strong id="stat-landings" class="text-white">0</strong></span>
+                            <span>⭕ Hoops: <strong id="stat-hoops" class="text-white">0</strong></span>
+                            <span>🔥 Max Combo: <strong id="stat-max-combo" class="text-amber-300">1x</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Enter Name for Leaderboard Form -->
+                    <form id="score-submit-form" class="mb-4">
+                        <label for="player-name-input" class="block text-left text-xs font-bold uppercase text-slate-600 mb-1">
+                            Enter Your Name & Class (e.g. Alex 6A)
+                        </label>
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                id="player-name-input"
+                                maxlength="18"
+                                placeholder="Your Name / Class..."
+                                required
+                                class="flex-1 px-4 py-3 rounded-xl border-2 border-slate-300 focus:border-sky-500 focus:outline-none font-bold text-slate-800 text-base"
+                            />
+                            <button type="submit" id="btn-save-score" class="btn-arcade btn-yellow px-5 py-3 rounded-xl font-bold text-base whitespace-nowrap">
+                                Save 🏆
+                            </button>
+                        </div>
+                    </form>
+                    <div id="score-saved-msg" class="hidden mb-4 py-2 px-3 bg-emerald-100 text-emerald-800 font-bold text-sm rounded-xl border border-emerald-300">
+                        ✅ Score added to the Booth Leaderboard!
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btn-view-board-end" class="btn-arcade btn-pink py-3 rounded-2xl font-bold text-base">
+                            🏆 Leaderboard
+                        </button>
+                        <button id="btn-play-again" class="btn-arcade btn-green py-3 rounded-2xl font-bold text-base">
+                            🔄 Next Player
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LEADERBOARD MODAL OVERLAY -->
+            <div id="screen-leaderboard" class="hidden absolute inset-0 z-40 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
+                <div class="bg-slate-900 text-white rounded-3xl max-w-md w-full p-6 shadow-2xl border-4 border-amber-400 flex flex-col max-h-[85vh]">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-3xl">🏆</span>
+                            <div>
+                                <h2 class="text-2xl font-extrabold text-amber-400 leading-none">BOOTH TOP 10</h2>
+                                <span class="text-xs text-slate-400">Open Day High Scores</span>
+                            </div>
+                        </div>
+                        <button id="btn-close-leaderboard" class="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xl flex items-center justify-center border border-slate-600">
+                            ✕
+                        </button>
+                    </div>
+
+                    <!-- Scores List -->
+                    <div id="leaderboard-list" class="flex-1 overflow-y-auto leaderboard-scroll space-y-2 pr-1 mb-4 min-h-[200px]">
+                        <!-- Populated dynamically via JS -->
+                    </div>
+
+                    <!-- Booth Organizer Reset Controls (2-step inline confirmation, no alert/confirm) -->
+                    <div class="pt-3 border-t border-slate-700 flex items-center justify-between gap-2">
+                        <div id="reset-confirm-group" class="flex items-center gap-2">
+                            <button id="btn-reset-prompt" class="text-xs text-slate-400 hover:text-rose-400 underline py-1 px-2 rounded transition">
+                                Reset Booth Board
+                            </button>
+                            <div id="reset-confirm-actions" class="hidden flex items-center gap-1.5">
+                                <span class="text-xs text-rose-300 font-semibold">Clear all?</span>
+                                <button id="btn-reset-confirm" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                                    Yes, Clear
+                                </button>
+                                <button id="btn-reset-cancel" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-2.5 py-1 rounded-lg">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+
+                        <button id="btn-close-leaderboard-bottom" class="btn-arcade btn-green px-5 py-2 rounded-xl font-bold text-sm">
+                            Back to Game
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        /**
+         * OPEN DAY BOOTH BLITZ!
+         * A single-file, self-contained HTML5 Canvas arcade game built for P5 & P6 Open Day booths.
+         * Features:
+         * - Custom 2D rigid-body-inspired bottle flip & projectile physics
+         * - Web Audio API synthesized sound effects (no external audio assets needed)
+         * - Moving platforms, floating bonus target hoops, golden mega-rings, and wind gusts
+         * - Persistent localStorage leaderboard for live booth competition
+         */
+
+        // ==========================================
+        // 1. WEB AUDIO SYNTHESIZER (Sound Effects)
+        // ==========================================
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggle() {
+                this.enabled = !this.enabled;
+                return this.enabled;
+            }
+
+            playThrow() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(520, now + 0.16);
+
+                gain.gain.setValueAtTime(0.22, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.18);
+            }
+
+            playRingPass(isGolden = false) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const notes = isGolden ? [587.33, 783.99, 1046.50, 1318.51] : [523.25, 659.25, 783.99];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.055);
+
+                    gain.gain.setValueAtTime(0.2, now + idx * 0.055);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + idx * 0.055 + 0.25);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.055);
+                    osc.stop(now + idx * 0.055 + 0.26);
+                });
+            }
+
+            playLandSuccess(combo = 1) {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const pitchBoost = Math.min(combo * 35, 350);
+                const freqs = [440 + pitchBoost, 554.37 + pitchBoost, 659.25 + pitchBoost, 880 + pitchBoost];
+
+                freqs.forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f, now + i * 0.045);
+
+                    gain.gain.setValueAtTime(0.24, now + i * 0.045);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + i * 0.045 + 0.3);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + i * 0.045);
+                    osc.stop(now + i * 0.045 + 0.31);
+                });
+            }
+
+            playMiss() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(190, now);
+                osc.frequency.linearRampToValueAtTime(95, now + 0.22);
+
+                gain.gain.setValueAtTime(0.14, now);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.24);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            }
+
+            playTick() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.08);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.09);
+            }
+
+            playGameOver() {
+                if (!this.enabled) return;
+                this.init();
+                if (!this.ctx) return;
+
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 493.88, 440, 392.00];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.14);
+
+                    gain.gain.setValueAtTime(0.22, now + idx * 0.14);
+                    gain.gain.exponentialRampToValueAtTime(0.005, now + idx * 0.14 + 0.35);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.14);
+                    osc.stop(now + idx * 0.14 + 0.36);
+                });
+            }
+        }
+
+        const sfx = new SoundFX();
+
+        // ==========================================
+        // 2. LEADERBOARD STORAGE MANAGER
+        // ==========================================
+        const STORAGE_KEY = 'open_day_booth_blitz_scores_v1';
+
+        const DefaultLeaderboard = [
+            { name: "Coach Tan (Demo)", score: 450, date: "Today" },
+            { name: "Maya 6B (Demo)", score: 320, date: "Today" },
+            { name: "Ryan 5A (Demo)", score: 210, date: "Today" }
+        ];
+
+        function getLeaderboard() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(DefaultLeaderboard));
+                    return [...DefaultLeaderboard];
+                }
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [...DefaultLeaderboard];
+            } catch (e) {
+                return [...DefaultLeaderboard];
+            }
+        }
+
+        function saveToLeaderboard(name, score) {
+            const cleanName = name.trim().slice(0, 18) || "Student Star";
+            const board = getLeaderboard();
+            board.push({
+                name: cleanName,
+                score: Math.floor(score),
+                date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            board.sort((a, b) => b.score - a.score);
+            const top10 = board.slice(0, 10);
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(top10));
+            } catch (e) {
+                console.warn("Could not save to localStorage", e);
+            }
+            return top10;
+        }
+
+        function resetLeaderboardStorage() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+            } catch (e) {
+                console.warn("Could not reset localStorage", e);
+            }
+        }
+
+        // ==========================================
+        // 3. GAME STATE & ENTITIES
+        // ==========================================
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = 0;
+        let height = 0;
+        let dpr = 1;
+
+        const GAME_DURATION = 60; // 60 seconds per student turn
+
+        const state = {
+            mode: 'START', // 'START', 'PLAYING', 'GAMEOVER'
+            score: 0,
+            combo: 1,
+            maxCombo: 1,
+            landings: 0,
+            hoopsHit: 0,
+            timeLeft: GAME_DURATION,
+            lastTimestamp: 0,
+            secondAccumulator: 0,
+            shakeTimer: 0,
+            shakeIntensity: 0,
+            bottleThemeIndex: 0
+        };
+
+        // Fun water bottle color themes (School House Colors!)
+        const BOTTLE_THEMES = [
+            { name: 'Blue House', liquid: '#0ea5e9', cap: '#0284c7', label: '#fde047' },
+            { name: 'Red House', liquid: '#f43f5e', cap: '#be123c', label: '#fef08a' },
+            { name: 'Green House', liquid: '#10b981', cap: '#047857', label: '#ffffff' },
+            { name: 'Yellow House', liquid: '#f59e0b', cap: '#b45309', label: '#38bdf8' }
+        ];
+
+        // Player's active water bottle
+        const bottle = {
+            x: 0,
+            y: 0,
+            vx: 0,
+            vy: 0,
+            angle: 0,
+            angularVel: 0,
+            width: 34,
+            height: 76,
+            isDragging: false,
+            isFlying: false,
+            isLanded: false,
+            landedTimer: 0,
+            landedPlatform: null,
+            landedOffsetX: 0,
+            dragStartX: 0,
+            dragStartY: 0,
+            dragCurrX: 0,
+            dragCurrY: 0,
+            totalRotation: 0,
+            trail: []
+        };
+
+        // Landing platforms (School desks / Booth tables)
+        let platforms = [];
+
+        // Floating target hoops (Hula hoops!)
+        let hoops = [];
+
+        // Visual particles & floating score popups
+        let particles = [];
+        let floatingTexts = [];
+        let clouds = [];
+
+        // ==========================================
+        // 4. INITIALIZATION & RESIZING
+        // ==========================================
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            width = rect.width;
+            height = rect.height;
+
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            if (!bottle.isFlying && !bottle.isLanded) {
+                resetBottlePosition();
+            }
+            if (platforms.length === 0) {
+                initEnvironment();
+            }
+        }
+
+        function getLaunchPadPos() {
+            return {
+                x: Math.max(75, width * 0.16),
+                y: height - Math.max(105, height * 0.17)
+            };
+        }
+
+        function resetBottlePosition() {
+            const pad = getLaunchPadPos();
+            bottle.x = pad.x;
+            bottle.y = pad.y - bottle.height / 2;
+            bottle.vx = 0;
+            bottle.vy = 0;
+            bottle.angle = 0;
+            bottle.angularVel = 0;
+            bottle.isDragging = false;
+            bottle.isFlying = false;
+            bottle.isLanded = false;
+            bottle.landedTimer = 0;
+            bottle.landedPlatform = null;
+            bottle.totalRotation = 0;
+            bottle.trail = [];
+        }
+
+        function initEnvironment() {
+            // Decorative background clouds
+            clouds = [];
+            for (let i = 0; i < 6; i++) {
+                clouds.push({
+                    x: Math.random() * width,
+                    y: 40 + Math.random() * (height * 0.35),
+                    scale: 0.6 + Math.random() * 0.7,
+                    speed: 8 + Math.random() * 14
+                });
+            }
+
+            spawnStageTargets();
+        }
+
+        function spawnStageTargets() {
+            platforms = [];
+            hoops = [];
+
+            const minX = Math.max(190, width * 0.34);
+            const maxX = width - 85;
+            const spanX = Math.max(140, maxX - minX);
+
+            // Create 2 dynamic booth tables / platforms
+            const plat1W = Math.max(95, Math.min(135, width * 0.15));
+            const plat2W = Math.max(82, Math.min(115, width * 0.12));
+
+            platforms.push({
+                x: minX + spanX * 0.25,
+                y: height * 0.68,
+                w: plat1W,
+                h: 22,
+                baseY: height * 0.68,
+                baseX: minX + spanX * 0.25,
+                moveType: 'vertical',
+                moveRange: Math.min(55, height * 0.09),
+                speed: 1.7 + Math.min(state.landings * 0.12, 1.8),
+                phase: 0,
+                color: '#f59e0b',
+                topColor: '#fef08a',
+                points: 100
+            });
+
+            platforms.push({
+                x: minX + spanX * 0.78,
+                y: height * 0.48,
+                w: plat2W,
+                h: 22,
+                baseY: height * 0.48,
+                baseX: minX + spanX * 0.78,
+                moveType: 'horizontal',
+                moveRange: Math.min(65, spanX * 0.22),
+                speed: 2.0 + Math.min(state.landings * 0.14, 2.0),
+                phase: Math.PI * 0.5,
+                color: '#ec4899',
+                topColor: '#fbcfe8',
+                points: 150
+            });
+
+            // Create 2 floating hula-hoop target rings
+            const midX1 = (getLaunchPadPos().x + platforms[0].baseX) * 0.52;
+            hoops.push({
+                x: midX1,
+                y: height * 0.42,
+                baseY: height * 0.42,
+                radius: Math.max(34, Math.min(46, width * 0.045)),
+                speed: 2.1,
+                phase: 0,
+                range: 45,
+                passed: false,
+                isGolden: false,
+                points: 50,
+                pulse: 0
+            });
+
+            const midX2 = (platforms[0].baseX + platforms[1].baseX) * 0.52;
+            hoops.push({
+                x: midX2,
+                y: height * 0.30,
+                baseY: height * 0.30,
+                radius: Math.max(30, Math.min(40, width * 0.04)),
+                speed: 2.6,
+                phase: 2.1,
+                range: 55,
+                passed: false,
+                isGolden: true, // Extra bonus ring!
+                points: 100,
+                pulse: 0
+            });
+        }
+
+        // ==========================================
+        // 5. INPUT HANDLING (MOUSE & TOUCH FLICK)
+        // ==========================================
+        function getPointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            if (e.touches && e.touches.length > 0) {
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            }
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+        }
+
+        function handlePointerDown(e) {
+            if (state.mode !== 'PLAYING') return;
+            if (bottle.isFlying || bottle.isLanded) return;
+
+            sfx.init();
+            const pos = getPointerPos(e);
+
+            // Allow dragging from anywhere in the left launch zone or near the bottle
+            const distToBottle = Math.hypot(pos.x - bottle.x, pos.y - bottle.y);
+            if (distToBottle < 150 || pos.x < width * 0.42) {
+                bottle.isDragging = true;
+                bottle.dragStartX = pos.x;
+                bottle.dragStartY = pos.y;
+                bottle.dragCurrX = pos.x;
+                bottle.dragCurrY = pos.y;
+            }
+        }
+
+        function handlePointerMove(e) {
+            if (!bottle.isDragging) return;
+            const pos = getPointerPos(e);
+            bottle.dragCurrX = pos.x;
+            bottle.dragCurrY = pos.y;
+        }
+
+        function handlePointerUp() {
+            if (!bottle.isDragging) return;
+            bottle.isDragging = false;
+
+            const launch = computeLaunchVelocity();
+            if (launch.power > 180) {
+                bottle.isFlying = true;
+                bottle.vx = launch.vx;
+                bottle.vy = launch.vy;
+                // Spin speed proportional to horizontal & upward flick
+                bottle.angularVel = (launch.vx * 0.011) + 6.5;
+                bottle.totalRotation = 0;
+
+                // Reset hoop pass flags for this throw
+                hoops.forEach(h => h.passed = false);
+                sfx.playThrow();
+            }
+        }
+
+        function computeLaunchVelocity() {
+            // Slingshot style: pull back (down-left) to shoot forward (up-right)
+            let dx = bottle.dragStartX - bottle.dragCurrX;
+            let dy = bottle.dragStartY - bottle.dragCurrY;
+
+            // If user swiped forward instead of pulling back, support natural flick too!
+            if (dx < -35 && dy < -35) {
+                dx = -dx;
+                dy = -dy;
+            }
+
+            const maxPull = 175;
+            const rawDist = Math.hypot(dx, dy);
+            const clampedDist = Math.min(rawDist, maxPull);
+            const angle = Math.atan2(dy, dx);
+
+            const speedScale = 7.4;
+            const power = clampedDist * speedScale;
+
+            return {
+                vx: Math.cos(angle) * power,
+                vy: Math.sin(angle) * power,
+                power
+            };
+        }
+
+        canvas.addEventListener('mousedown', handlePointerDown);
+        window.addEventListener('mousemove', handlePointerMove);
+        window.addEventListener('mouseup', handlePointerUp);
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handlePointerDown(e);
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+            if (bottle.isDragging) {
+                e.preventDefault();
+                handlePointerMove(e);
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', handlePointerUp);
+
+        // ==========================================
+        // 6. PARTICLES & POPUP TEXTS
+        // ==========================================
+        function spawnParticles(x, y, colors, count = 22) {
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 90 + Math.random() * 280;
+                particles.push({
+                    x,
+                    y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 80,
+                    size: 5 + Math.random() * 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    alpha: 1,
+                    life: 0.55 + Math.random() * 0.45,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 12
+                });
+            }
+        }
+
+        function spawnFloatingText(x, y, text, color = '#fde047', scale = 1.0) {
+            floatingTexts.push({
+                x,
+                y,
+                vy: -75,
+                text,
+                color,
+                scale,
+                alpha: 1,
+                life: 1.15
+            });
+        }
+
+        function triggerShake(intensity = 7, duration = 0.2) {
+            state.shakeIntensity = intensity;
+            state.shakeTimer = duration;
+        }
+
+        // ==========================================
+        // 7. PHYSICS & GAMEPLAY UPDATE LOOP
+        // ==========================================
+        const GRAVITY = 1380;
+
+        function update(dt) {
+            // Update background clouds
+            clouds.forEach(c => {
+                c.x += c.speed * dt;
+                if (c.x > width + 140) c.x = -140;
+            });
+
+            // Screen shake decay
+            if (state.shakeTimer > 0) {
+                state.shakeTimer -= dt;
+            }
+
+            // Update platforms movement
+            platforms.forEach(p => {
+                p.phase += p.speed * dt;
+                if (p.moveType === 'vertical') {
+                    p.y = p.baseY + Math.sin(p.phase) * p.moveRange;
+                } else {
+                    p.x = p.baseX + Math.sin(p.phase) * p.moveRange;
+                }
+            });
+
+            // Update hoops movement
+            hoops.forEach(h => {
+                h.phase += h.speed * dt;
+                h.y = h.baseY + Math.sin(h.phase) * h.range;
+                if (h.pulse > 0) h.pulse = Math.max(0, h.pulse - dt * 3);
+            });
+
+            // Update particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const pt = particles[i];
+                pt.x += pt.vx * dt;
+                pt.y += pt.vy * dt;
+                pt.vy += 520 * dt;
+                pt.rotation += pt.rotSpeed * dt;
+                pt.life -= dt;
+                pt.alpha = Math.max(0, pt.life * 1.4);
+                if (pt.life <= 0) particles.splice(i, 1);
+            }
+
+            // Update floating score popups
+            for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                const ft = floatingTexts[i];
+                ft.y += ft.vy * dt;
+                ft.vy *= 0.96;
+                ft.life -= dt;
+                ft.alpha = Math.min(1, ft.life * 1.6);
+                if (ft.life <= 0) floatingTexts.splice(i, 1);
+            }
+
+            if (state.mode !== 'PLAYING') return;
+
+            // Update 60s Countdown Timer
+            state.secondAccumulator += dt;
+            if (state.secondAccumulator >= 1.0) {
+                state.secondAccumulator -= 1.0;
+                state.timeLeft = Math.max(0, state.timeLeft - 1);
+                updateHUD();
+
+                if (state.timeLeft <= 10 && state.timeLeft > 0) {
+                    sfx.playTick();
+                }
+
+                if (state.timeLeft === 0) {
+                    endGame();
+                    return;
+                }
+            }
+
+            // Bottle landed celebration pause before next bottle
+            if (bottle.isLanded) {
+                if (bottle.landedPlatform) {
+                    bottle.x = bottle.landedPlatform.x + bottle.landedOffsetX;
+                    bottle.y = bottle.landedPlatform.y - bottle.height / 2;
+                }
+                bottle.landedTimer -= dt;
+                if (bottle.landedTimer <= 0) {
+                    state.bottleThemeIndex = (state.bottleThemeIndex + 1) % BOTTLE_THEMES.length;
+                    spawnStageTargets();
+                    resetBottlePosition();
+                }
+                return;
+            }
+
+            // Bottle mid-air flight physics
+            if (bottle.isFlying) {
+                const prevY = bottle.y;
+                bottle.vy += GRAVITY * dt;
+                bottle.x += bottle.vx * dt;
+                bottle.y += bottle.vy * dt;
+
+                bottle.angle += bottle.angularVel * dt;
+                bottle.totalRotation += Math.abs(bottle.angularVel * dt);
+
+                // Trail effect
+                bottle.trail.push({ x: bottle.x, y: bottle.y, angle: bottle.angle, alpha: 0.45 });
+                if (bottle.trail.length > 10) bottle.trail.shift();
+
+                // Check Target Hoop Pass-Through!
+                hoops.forEach(h => {
+                    if (!h.passed) {
+                        const dist = Math.hypot(bottle.x - h.x, bottle.y - h.y);
+                        if (dist < h.radius + 14) {
+                            h.passed = true;
+                            h.pulse = 1;
+                            state.hoopsHit++;
+                            const pts = h.points * state.combo;
+                            state.score += pts;
+                            updateHUD();
+
+                            sfx.playRingPass(h.isGolden);
+                            spawnParticles(
+                                h.x,
+                                h.y,
+                                h.isGolden ? ['#fde047', '#f59e0b', '#ffffff'] : ['#38bdf8', '#f472b6', '#fde047'],
+                                20
+                            );
+                            spawnFloatingText(
+                                h.x,
+                                h.y - 25,
+                                h.isGolden ? `MEGA RING! +${pts}` : `RING BONUS! +${pts}`,
+                                h.isGolden ? '#fde047' : '#7dd3fc',
+                                1.15
+                            );
+                        }
+                    }
+                });
+
+                // Check Platform Landing
+                const bottleBottom = bottle.y + bottle.height * 0.45;
+                const prevBottom = prevY + bottle.height * 0.45;
+
+                if (bottle.vy > 0) {
+                    for (const p of platforms) {
+                        const withinX = bottle.x >= p.x - p.w / 2 - 10 && bottle.x <= p.x + p.w / 2 + 10;
+                        const crossedTop = prevBottom <= p.y + 12 && bottleBottom >= p.y - 4;
+
+                        if (withinX && crossedTop) {
+                            // Normalize angle to [-PI, PI]
+                            let normAngle = bottle.angle % (Math.PI * 2);
+                            if (normAngle > Math.PI) normAngle -= Math.PI * 2;
+                            if (normAngle < -Math.PI) normAngle += Math.PI * 2;
+
+                            // Upright tolerance (~42 degrees = 0.74 rad)
+                            const isUpright = Math.abs(normAngle) <= 0.74;
+                            const didFlip = bottle.totalRotation >= Math.PI * 1.1;
+
+                            if (isUpright) {
+                                // SUCCESSFUL BOTTLE FLIP LANDING!
+                                bottle.isFlying = false;
+                                bottle.isLanded = true;
+                                bottle.landedTimer = 0.65;
+                                bottle.landedPlatform = p;
+                                bottle.landedOffsetX = Math.max(-p.w / 2 + 14, Math.min(p.w / 2 - 14, bottle.x - p.x));
+                                bottle.angle = 0;
+                                bottle.y = p.y - bottle.height / 2;
+
+                                state.landings++;
+                                const flipBonus = didFlip ? 50 : 0;
+                                const earned = (p.points + flipBonus) * state.combo;
+                                state.score += earned;
+
+                                // Increment combo!
+                                state.combo = Math.min(state.combo + 1, 8);
+                                if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+                                updateHUD();
+
+                                sfx.playLandSuccess(state.combo);
+                                triggerShake(6, 0.16);
+                                spawnParticles(bottle.x, p.y, ['#4ade80', '#fde047', '#38bdf8', '#f472b6'], 30);
+                                spawnFloatingText(
+                                    bottle.x,
+                                    p.y - 55,
+                                    didFlip ? `FLIP LANDED! +${earned}` : `LANDED! +${earned}`,
+                                    '#4ade80',
+                                    1.25
+                                );
+                                return;
+                            } else {
+                                // Hit table sideways -> bounce off!
+                                bottle.vy = -bottle.vy * 0.45;
+                                bottle.vx = bottle.vx * 0.5 + (Math.random() - 0.5) * 140;
+                                bottle.angularVel = (Math.random() > 0.5 ? 1 : -1) * 11;
+                                sfx.playMiss();
+                                spawnFloatingText(bottle.x, p.y - 35, 'TIPPED OVER!', '#fda4af', 0.95);
+                            }
+                        }
+                    }
+                }
+
+                // Out of bounds check (missed!)
+                if (bottle.y > height + 80 || bottle.x > width + 80 || bottle.x < -80) {
+                    if (state.combo > 1) {
+                        spawnFloatingText(width * 0.5, height * 0.55, 'COMBO RESET!', '#fca5a5', 1.0);
+                    }
+                    state.combo = 1;
+                    updateHUD();
+                    sfx.playMiss();
+                    resetBottlePosition();
+                }
+            }
+        }
+
+        // ==========================================
+        // 8. RENDERING (CARNIVAL BOOTH GRAPHICS)
+        // ==========================================
+        function draw() {
+            ctx.save();
+
+            // Screen shake offset
+            if (state.shakeTimer > 0) {
+                const sx = (Math.random() - 0.5) * state.shakeIntensity * 2;
+                const sy = (Math.random() - 0.5) * state.shakeIntensity * 2;
+                ctx.translate(sx, sy);
+            }
+
+            // 1. Vibrant Sky Backdrop
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            skyGrad.addColorStop(0, '#0284c7');
+            skyGrad.addColorStop(0.55, '#38bdf8');
+            skyGrad.addColorStop(1, '#bae6fd');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // 2. Soft Sunbeams & Fluffy Clouds
+            drawClouds();
+
+            // 3. School Open Day Carnival Bunting Flags at Top
+            drawBunting();
+
+            // 4. School Campus Grass & Open Day Booth Floor
+            drawGroundAndBooth();
+
+            // 5. Floating Target Hoops (Back half -> Bottle -> Front half feel)
+            hoops.forEach(h => drawHoop(h));
+
+            // 6. Moving Booth Tables / Platforms
+            platforms.forEach(p => drawPlatform(p));
+
+            // 7. Aiming Trajectory Guide (when dragging)
+            if (bottle.isDragging && state.mode === 'PLAYING') {
+                drawAimTrajectory();
+            }
+
+            // 8. Bottle Flight Trail & Water Bottle
+            drawBottleTrail();
+            drawWaterBottle(bottle.x, bottle.y, bottle.angle, BOTTLE_THEMES[state.bottleThemeIndex]);
+
+            // 9. Confetti Particles & Floating Score Popups
+            drawParticles();
+            drawFloatingTexts();
+
+            // 10. Interactive Drag Prompt Hand (if idle at start of round)
+            if (state.mode === 'PLAYING' && !bottle.isDragging && !bottle.isFlying && !bottle.isLanded && state.landings === 0) {
+                drawDragHint();
+            }
+
+            ctx.restore();
+        }
+
+        function drawClouds() {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+            clouds.forEach(c => {
+                ctx.save();
+                ctx.translate(c.x, c.y);
+                ctx.scale(c.scale, c.scale);
+                ctx.beginPath();
+                ctx.arc(0, 0, 28, 0, Math.PI * 2);
+                ctx.arc(24, -8, 34, 0, Math.PI * 2);
+                ctx.arc(54, 0, 26, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawBunting() {
+            const flagColors = ['#f43f5e', '#facc15', '#22c55e', '#3b82f6', '#a855f7'];
+            const flagW = 34;
+            const flagH = 26;
+            const count = Math.ceil(width / flagW) + 1;
+
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 4);
+            ctx.quadraticCurveTo(width / 2, 22, width, 4);
+            ctx.stroke();
+
+            for (let i = 0; i < count; i++) {
+                const fx = i * flagW;
+                const progress = fx / width;
+                const sagY = 4 + Math.sin(progress * Math.PI) * 11;
+
+                ctx.fillStyle = flagColors[i % flagColors.length];
+                ctx.beginPath();
+                ctx.moveTo(fx, sagY);
+                ctx.lineTo(fx + flagW - 2, sagY);
+                ctx.lineTo(fx + flagW / 2 - 1, sagY + flagH);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        function drawGroundAndBooth() {
+            const groundY = height - 48;
+
+            // Distant school hills
+            ctx.fillStyle = '#4ade80';
+            ctx.beginPath();
+            ctx.ellipse(width * 0.25, groundY + 10, width * 0.45, 55, 0, Math.PI, 0);
+            ctx.fill();
+
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.ellipse(width * 0.78, groundY + 12, width * 0.45, 65, 0, Math.PI, 0);
+            ctx.fill();
+
+            // Main turf strip
+            ctx.fillStyle = '#16a34a';
+            ctx.fillRect(0, groundY, width, 48);
+
+            // Launch Podium / Booth Table on the left
+            const pad = getLaunchPadPos();
+            const tableW = 96;
+            const tableH = height - pad.y;
+
+            // Striped carnival booth skirt
+            const stripeCount = 6;
+            const stripeW = tableW / stripeCount;
+            for (let i = 0; i < stripeCount; i++) {
+                ctx.fillStyle = i % 2 === 0 ? '#ef4444' : '#ffffff';
+                ctx.fillRect(pad.x - tableW / 2 + i * stripeW, pad.y, stripeW, tableH);
+            }
+
+            // Table top rim
+            ctx.fillStyle = '#fde047';
+            ctx.beginPath();
+            ctx.roundRect(pad.x - tableW / 2 - 6, pad.y - 8, tableW + 12, 16, 8);
+            ctx.fill();
+            ctx.strokeStyle = '#ca8a04';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+        }
+
+        function drawHoop(h) {
+            ctx.save();
+            ctx.translate(h.x, h.y);
+            const scale = 1 + h.pulse * 0.22;
+            ctx.scale(scale, scale);
+
+            // Outer glow
+            ctx.beginPath();
+            ctx.ellipse(0, 0, h.radius * 0.45, h.radius, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = h.passed
+                ? 'rgba(74, 222, 128, 0.85)'
+                : h.isGolden
+                ? 'rgba(253, 224, 71, 0.95)'
+                : 'rgba(244, 114, 182, 0.95)';
+            ctx.lineWidth = 9;
+            ctx.stroke();
+
+            // Inner highlight ring
+            ctx.beginPath();
+            ctx.ellipse(0, 0, h.radius * 0.45, h.radius, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Points badge above hoop
+            ctx.fillStyle = h.isGolden ? '#fef08a' : '#ffffff';
+            ctx.font = 'bold 13px Fredoka, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(h.passed ? '✓' : `+${h.points}`, 0, -h.radius - 8);
+
+            ctx.restore();
+        }
+
+        function drawPlatform(p) {
+            ctx.save();
+
+            // Support pole / shadow pillar
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.22)';
+            ctx.fillRect(p.x - 8, p.y + p.h, 16, height - p.y);
+
+            // Platform body
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.roundRect(p.x - p.w / 2, p.y, p.w, p.h, 10);
+            ctx.fill();
+
+            // Landing deck top highlight
+            ctx.fillStyle = p.topColor;
+            ctx.beginPath();
+            ctx.roundRect(p.x - p.w / 2 + 3, p.y + 2, p.w - 6, 7, 5);
+            ctx.fill();
+
+            // Outline
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.roundRect(p.x - p.w / 2, p.y, p.w, p.h, 10);
+            ctx.stroke();
+
+            // Point label on platform
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 12px Fredoka, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${p.points} PTS`, p.x, p.y + p.h + 15);
+
+            ctx.restore();
+        }
+
+        function drawAimTrajectory() {
+            const launch = computeLaunchVelocity();
+            if (launch.power < 120) return;
+
+            ctx.save();
+            const steps = 16;
+            const stepDt = 0.045;
+
+            for (let i = 1; i <= steps; i++) {
+                const t = i * stepDt;
+                const px = bottle.x + launch.vx * t;
+                const py = bottle.y + launch.vy * t + 0.5 * GRAVITY * t * t;
+
+                if (py > height) break;
+
+                const alpha = 1 - i / (steps + 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.9})`;
+                ctx.beginPath();
+                ctx.arc(px, py, Math.max(3, 7 - i * 0.25), 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function drawBottleTrail() {
+            bottle.trail.forEach((t, idx) => {
+                const ratio = (idx + 1) / bottle.trail.length;
+                ctx.save();
+                ctx.translate(t.x, t.y);
+                ctx.rotate(t.angle);
+                ctx.fillStyle = `rgba(255, 255, 255, ${ratio * 0.25})`;
+                ctx.beginPath();
+                ctx.roundRect(-12, -28, 24, 56, 8);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function drawWaterBottle(x, y, angle, theme) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+
+            const w = bottle.width;
+            const h = bottle.height;
+
+            // Bottle plastic body (translucent white-blue)
+            ctx.fillStyle = 'rgba(240, 249, 255, 0.92)';
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 2.5;
+
+            // Main cylinder
+            ctx.beginPath();
+            ctx.roundRect(-w / 2, -h * 0.28, w, h * 0.78, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            // Shoulder taper
+            ctx.beginPath();
+            ctx.moveTo(-w / 2 + 2, -h * 0.26);
+            ctx.lineTo(-w * 0.24, -h * 0.42);
+            ctx.lineTo(w * 0.24, -h * 0.42);
+            ctx.lineTo(w / 2 - 2, -h * 0.26);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Water inside (bottom 40% filled for optimal bottle-flip center of mass!)
+            ctx.fillStyle = theme.liquid;
+            ctx.beginPath();
+            ctx.roundRect(-w / 2 + 3, h * 0.14, w - 6, h * 0.33, [2, 2, 6, 6]);
+            ctx.fill();
+
+            // School house label band
+            ctx.fillStyle = theme.label;
+            ctx.fillRect(-w / 2 + 1.5, -h * 0.08, w - 3, h * 0.18);
+
+            // Bottle cap
+            ctx.fillStyle = theme.cap;
+            ctx.beginPath();
+            ctx.roundRect(-w * 0.26, -h * 0.52, w * 0.52, h * 0.11, 3);
+            ctx.fill();
+            ctx.stroke();
+
+            // Glossy plastic reflection highlight
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+            ctx.beginPath();
+            ctx.roundRect(-w / 2 + 5, -h * 0.22, 4, h * 0.62, 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function drawParticles() {
+            particles.forEach(pt => {
+                ctx.save();
+                ctx.globalAlpha = pt.alpha;
+                ctx.translate(pt.x, pt.y);
+                ctx.rotate(pt.rotation);
+                ctx.fillStyle = pt.color;
+                ctx.fillRect(-pt.size / 2, -pt.size / 2, pt.size, pt.size * 0.65);
+                ctx.restore();
+            });
+        }
+
+        function drawFloatingTexts() {
+            floatingTexts.forEach(ft => {
+                ctx.save();
+                ctx.globalAlpha = ft.alpha;
+                ctx.translate(ft.x, ft.y);
+                ctx.scale(ft.scale, ft.scale);
+                ctx.font = 'bold 22px Fredoka, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#0f172a';
+                ctx.strokeText(ft.text, 0, 0);
+                ctx.fillStyle = ft.color;
+                ctx.fillText(ft.text, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        function drawDragHint() {
+            const pulse = Math.sin(performance.now() * 0.006) * 12;
+            ctx.save();
+            ctx.translate(bottle.x + 25, bottle.y + 10);
+
+            // Dotted pull-back guide
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(-35 + pulse * 0.5, 35 - pulse * 0.5);
+            ctx.stroke();
+
+            // Text bubble
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+            ctx.beginPath();
+            ctx.roundRect(-10, -45 + pulse * 0.3, 145, 30, 12);
+            ctx.fill();
+
+            ctx.fillStyle = '#fde047';
+            ctx.font = 'bold 13px Fredoka, sans-serif';
+            ctx.fillText('👆 Drag & Release!', 62, -25 + pulse * 0.3);
+            ctx.restore();
+        }
+
+        // ==========================================
+        // 9. UI & GAME FLOW CONTROLLERS
+        // ==========================================
+        const elScore = document.getElementById('hud-score');
+        const elCombo = document.getElementById('hud-combo');
+        const elComboBox = document.getElementById('hud-combo-box');
+        const elTimer = document.getElementById('hud-timer');
+        const elStartHighScore = document.getElementById('start-high-score');
+
+        const screenStart = document.getElementById('screen-start');
+        const screenGameover = document.getElementById('screen-gameover');
+        const screenLeaderboard = document.getElementById('screen-leaderboard');
+        const btnQuitEarly = document.getElementById('btn-quit-early');
+
+        function updateHUD() {
+            elScore.textContent = state.score.toLocaleString();
+            elCombo.textContent = `${state.combo}x`;
+
+            if (state.combo >= 3) {
+                elComboBox.classList.add('border-amber-400', 'scale-105');
+            } else {
+                elComboBox.classList.remove('border-amber-400', 'scale-105');
+            }
+
+            elTimer.textContent = `${state.timeLeft}s`;
+            if (state.timeLeft <= 10 && state.mode === 'PLAYING') {
+                elTimer.classList.add('timer-urgent');
+                elTimer.classList.remove('text-emerald-400');
+            } else {
+                elTimer.classList.remove('timer-urgent');
+                elTimer.classList.add('text-emerald-400');
+            }
+        }
+
+        function refreshStartTopScore() {
+            const board = getLeaderboard();
+            if (board.length > 0) {
+                elStartHighScore.textContent = `${board[0].score.toLocaleString()} pts (${board[0].name})`;
+            } else {
+                elStartHighScore.textContent = '0 pts (Be #1!)';
+            }
+        }
+
+        function startGame() {
+            sfx.init();
+            state.mode = 'PLAYING';
+            state.score = 0;
+            state.combo = 1;
+            state.maxCombo = 1;
+            state.landings = 0;
+            state.hoopsHit = 0;
+            state.timeLeft = GAME_DURATION;
+            state.secondAccumulator = 0;
+            state.bottleThemeIndex = 0;
+
+            particles = [];
+            floatingTexts = [];
+            spawnStageTargets();
+            resetBottlePosition();
+            updateHUD();
+
+            screenStart.classList.add('hidden');
+            screenGameover.classList.add('hidden');
+            screenLeaderboard.classList.add('hidden');
+            btnQuitEarly.classList.remove('hidden');
+        }
+
+        function endGame() {
+            state.mode = 'GAMEOVER';
+            bottle.isDragging = false;
+            btnQuitEarly.classList.add('hidden');
+            sfx.playGameOver();
+
+            // Populate Game Over stats
+            document.getElementById('final-score').textContent = state.score.toLocaleString();
+            document.getElementById('stat-landings').textContent = state.landings;
+            document.getElementById('stat-hoops').textContent = state.hoopsHit;
+            document.getElementById('stat-max-combo').textContent = `${state.maxCombo}x`;
+
+            // Check if it beats the current #1 score
+            const board = getLeaderboard();
+            const topScore = board.length > 0 ? board[0].score : 0;
+            const badge = document.getElementById('new-record-badge');
+            if (state.score > topScore && state.score > 0) {
+                badge.classList.remove('hidden');
+                spawnParticles(width / 2, height / 2, ['#fde047', '#f43f5e', '#38bdf8', '#4ade80'], 55);
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            // Reset score submission form state
+            const form = document.getElementById('score-submit-form');
+            const savedMsg = document.getElementById('score-saved-msg');
+            const input = document.getElementById('player-name-input');
+            form.classList.remove('hidden');
+            savedMsg.classList.add('hidden');
+            input.value = '';
+
+            screenGameover.classList.remove('hidden');
+        }
+
+        function renderLeaderboardModal() {
+            const listEl = document.getElementById('leaderboard-list');
+            const board = getLeaderboard();
+
+            if (board.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-10 text-slate-400">
+                        <div class="text-4xl mb-2">🎯</div>
+                        <p class="font-bold text-slate-300">No scores recorded yet!</p>
+                        <p class="text-xs mt-1">Play a 60-second round to set the first booth record.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const medals = ['🥇', '🥈', '🥉'];
+            listEl.innerHTML = board.map((entry, idx) => {
+                const rankBadge = idx < 3
+                    ? `<span class="text-xl">${medals[idx]}</span>`
+                    : `<span class="w-6 text-center font-arcade font-bold text-slate-400">#${idx + 1}</span>`;
+
+                const rowHighlight = idx === 0
+                    ? 'bg-gradient-to-r from-amber-500/25 to-yellow-500/10 border-amber-400/60'
+                    : 'bg-slate-800/80 border-slate-700';
+
+                return `
+                    <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl border ${rowHighlight}">
+                        <div class="flex items-center gap-3 min-w-0">
+                            ${rankBadge}
+                            <div class="truncate">
+                                <div class="font-bold text-white text-sm sm:text-base truncate">${escapeHTML(entry.name)}</div>
+                                <div class="text-[11px] text-slate-400">${escapeHTML(entry.date || '')}</div>
+                            </div>
+                        </div>
+                        <div class="font-arcade font-bold text-amber-300 text-lg sm:text-xl pl-2">
+                            ${entry.score.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHTML(str) {
+            return String(str).replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        // Button Event Listeners
+        document.getElementById('btn-start-game').addEventListener('click', startGame);
+        document.getElementById('btn-play-again').addEventListener('click', startGame);
+
+        document.getElementById('btn-quit-early').addEventListener('click', () => {
+            if (state.mode === 'PLAYING') {
+                endGame();
+            }
+        });
+
+        document.getElementById('btn-sound').addEventListener('click', () => {
+            const isOn = sfx.toggle();
+            document.getElementById('sound-icon').textContent = isOn ? '🔊' : '🔇';
+        });
+
+        // Score Submit Form
+        document.getElementById('score-submit-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const input = document.getElementById('player-name-input');
+            const nameVal = input.value.trim();
+            if (!nameVal) return;
+
+            saveToLeaderboard(nameVal, state.score);
+            refreshStartTopScore();
+
+            document.getElementById('score-submit-form').classList.add('hidden');
+            document.getElementById('score-saved-msg').classList.remove('hidden');
+        });
+
+        // Leaderboard Open / Close
+        function openLeaderboard() {
+            renderLeaderboardModal();
+            // Reset confirmation prompt state
+            document.getElementById('btn-reset-prompt').classList.remove('hidden');
+            document.getElementById('reset-confirm-actions').classList.add('hidden');
+            screenLeaderboard.classList.remove('hidden');
+        }
+
+        function closeLeaderboard() {
+            screenLeaderboard.classList.add('hidden');
+        }
+
+        document.getElementById('btn-open-leaderboard').addEventListener('click', openLeaderboard);
+        document.getElementById('btn-view-board-end').addEventListener('click', openLeaderboard);
+        document.getElementById('btn-close-leaderboard').addEventListener('click', closeLeaderboard);
+        document.getElementById('btn-close-leaderboard-bottom').addEventListener('click', closeLeaderboard);
+
+        // Two-step Reset Leaderboard Confirmation (No alert/confirm dialogs!)
+        document.getElementById('btn-reset-prompt').addEventListener('click', () => {
+            document.getElementById('btn-reset-prompt').classList.add('hidden');
+            document.getElementById('reset-confirm-actions').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-reset-cancel').addEventListener('click', () => {
+            document.getElementById('reset-confirm-actions').classList.add('hidden');
+            document.getElementById('btn-reset-prompt').classList.remove('hidden');
+        });
+
+        document.getElementById('btn-reset-confirm').addEventListener('click', () => {
+            resetLeaderboardStorage();
+            refreshStartTopScore();
+            renderLeaderboardModal();
+            document.getElementById('reset-confirm-actions').classList.add('hidden');
+            document.getElementById('btn-reset-prompt').classList.remove('hidden');
+        });
+
+        // ==========================================
+        // 10. MAIN ANIMATION LOOP
+        // ==========================================
+        function gameLoop(timestamp) {
+            if (!state.lastTimestamp) state.lastTimestamp = timestamp;
+            const dt = Math.min((timestamp - state.lastTimestamp) / 1000, 0.05);
+            state.lastTimestamp = timestamp;
+
+            update(dt);
+            draw();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        window.onload = function () {
+            resizeCanvas();
+            refreshStartTopScore();
+            updateHUD();
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>
